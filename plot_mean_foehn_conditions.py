@@ -95,8 +95,22 @@ def create_vectorfield(grid_U, grid_V, variable, variable_lvl, unit, model, vmin
     plt.savefig(f'/home/chmony/Documents/Results/newgradient/weathermap_{variable}_{variable_lvl}_{model}.pdf', bbox_inches='tight', dpi=200)
     print(f"Saved figure at: /home/chmony/Documents/Results/newgradient/weathermap_{variable}_{variable_lvl}_{model}.pdf'")
 
+def generate_coordinates_from_feature_label(feature_list, variable):
+    
+    feature_list = [feature.split("_") for feature in feature_list if variable + "_" in feature]
+    if variable=="DELTAPHI" or variable=="U":
+        coordinates = [[feature[0], feature[1], feature[2]] for feature in feature_list]
+        df_importances = pd.DataFrame(coordinates, columns =["variable", "lat1", "lon1"])
+        df_importances[["lat1", "lon1"]] = df_importances[["lat1", "lon1"]].astype(int)
+        return df_importances
+    else:
+        coordinates = [[feature[1], feature[2], feature[3], feature[6], feature[7]] for feature in feature_list]
+        df_importances = pd.DataFrame(coordinates, columns =["variable", "lat1", "lon1", "lat2", "lon2"], dtype=int)
+        df_importances[["lat1", "lon1", "lat2", "lon2"]] = df_importances[["lat1", "lon1", "lat2", "lon2"]].astype(int)
+        return df_importances
+    
 # Obtain ERA-Interim mean grid configurations
-def create_contour(grid, variable, variable_lvl, unit, model, vmin, vmax, lats_labels, lons_labels):
+def create_contour(grid, variable, variable_lvl, unit, model, vmin, vmax, lats_labels, lons_labels, df_importances):
   
     lats = [int(lat)/100.0 for lat in lats_labels]
     lons = [int(lon)/100.0 for lon in lons_labels]
@@ -119,46 +133,27 @@ def create_contour(grid, variable, variable_lvl, unit, model, vmin, vmax, lats_l
 #     for c in cnt.collections:
 #         c.set_edgecolor("face")
 
-#    pressure_difference_amount = 40
-#    df_sample = importances.loc[0:pressure_difference_amount-1,:]
-#    if variable == "DELTAPHI":
-#        for i in range(len(df_sample.lat1)):
-#            plt.plot(df_sample.loc[i, "lon1"]*0.01,
-#                     df_sample.loc[i, "lat1"]*0.01,
-#                     "bx",
-#                     markersize=12*(len(df_sample.lat1)-i)/len(df_sample.lat1),
-#                     alpha=(len(df_sample.lat1)-i)/len(df_sample.lat1),
-#                     mew=4)
-#
-#        end = len(df_sample.lat1)-1
-#        print(df_sample.loc[end,:])
-#        plt.plot(df_sample.loc[end-1, "lon1"]*0.01,
-#                     df_sample.loc[end-1, "lat1"]*0.01,
-#                     "rx",
-#                     markersize=12,
-#                     alpha=1,
-#                     mew=4)
-#        plt.plot(df_sample.loc[end, "lon1"]*0.01,
-#                     df_sample.loc[end, "lat1"]*0.01,
-#                     "rx",
-#                     markersize=12,
-#                     alpha=1,
-#                     mew=4)
-#    else:
-#        for i in range(len(df_sample.lat1)):
-#            plt.plot([df_sample.loc[i, "lon1"]*0.01, df_sample.loc[i, "lon2"]*0.01],
-#                    [df_sample.loc[i, "lat1"]*0.01, df_sample.loc[i, "lat2"]*0.01],
-#                    alpha=(len(df_sample.lat1)-i)/len(df_sample.lat1),
-#                    c='b',
-#                    linewidth=5*(len(df_sample.lat1)-i)/len(df_sample.lat1))
-#
-#        end = len(df_sample.lat1)-1
-#        print(df_sample.loc[end,:])
-#        plt.plot([df_sample.loc[end, "lon1"]*0.01, df_sample.loc[end, "lon2"]*0.01],
-#                    [df_sample.loc[end, "lat1"]*0.01, df_sample.loc[end, "lat2"]*0.01],
-#                    alpha=1,
-#                    c='r',
-#                    linewidth=5)
+
+    if variable == "DELTAPHI":
+        for i in range(len(df_importances.index)):
+            plt.plot(df_importances.loc[i, "lon1"]*0.01,
+                    df_importances.loc[i, "lat1"]*0.01,
+                    "bx",
+                    markersize=12,
+                    alpha=0.8,
+                    mew=4)
+
+    else:
+        for i in range(len(df_importances.index)):
+            plt.plot([df_importances.loc[i, "lon1"]*0.01, df_importances.loc[i, "lon2"]*0.01],
+                   [df_importances.loc[i, "lat1"]*0.01, df_importances.loc[i, "lat2"]*0.01],
+                   alpha=0.8,
+                   c='b',
+                   linewidth=5)
+
+    
+    
+    #Plot Foehn location
     plt.plot(8.6833, 46.5167, 'o', color="#00FF00",markersize=8) #Altdorf 8.64441, 46.88042
     mf.drawmap(nbrem=1, nbrep=1)
 
@@ -166,7 +161,7 @@ def create_contour(grid, variable, variable_lvl, unit, model, vmin, vmax, lats_l
     print(f"Saved figure at: /home/chmony/Documents/Results/newgradient/weathermap_{variable}_{variable_lvl}_{model}.pdf'")
 
     
-def plot_mean_foehn_condition_for_one_model(variable, variable_lvl, unit, model, vmin, vmax, df, foehn, lats_labels, lons_labels):
+def plot_mean_foehn_condition_for_one_model(variable, variable_lvl, unit, model, vmin, vmax, df, foehn, lats_labels, lons_labels, df_importances):
     df_foehn = df.loc[foehn == 1, :]
     
     if variable == "U":
@@ -174,7 +169,7 @@ def plot_mean_foehn_condition_for_one_model(variable, variable_lvl, unit, model,
         create_vectorfield(grid_U, grid_V, variable, variable_lvl, unit, model, vmin, vmax, lats_labels, lons_labels)
     else:
         grid = transform_to_2D_grid(df_foehn, variable, variable_lvl, lats_labels, lons_labels)
-        create_contour(grid, variable, variable_lvl, unit, model, vmin, vmax, lats_labels, lons_labels)
+        create_contour(grid, variable, variable_lvl, unit, model, vmin, vmax, lats_labels, lons_labels, df_importances)
         
     
 
