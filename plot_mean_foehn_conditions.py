@@ -8,7 +8,6 @@ import matplotlib
 from utils import calc_pot_temp
 
 def calculate_stability(df, lats, lons):
-    print("Change2")
     stability_dict = {}
     
     for lat in lats:
