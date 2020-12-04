@@ -1,5 +1,5 @@
 # Exclude the following folders from commits
 
-.ipython_checkpoints
+.ipynb_checkpoints/*
 __pycache__
 catboost_info

@@ -46,7 +46,7 @@ def transform_to_2D_grid(df, variable, variable_lvl, lats_labels, lons_labels):
         
         return grid_foehn
     
-def create_vectorfield(grid_U, grid_V, variable, variable_lvl, unit, model, vmin, vmax, lats_labels, lons_labels):
+def create_vectorfield(grid_U, grid_V, variable, variable_lvl, unit, model, vmin, vmax, lats_labels, lons_labels, df_importances):
   
     lats = [int(lat)/100.0 for lat in lats_labels]
     lons = [int(lon)/100.0 for lon in lons_labels]
@@ -71,23 +71,15 @@ def create_vectorfield(grid_U, grid_V, variable, variable_lvl, unit, model, vmin
                         extend="both")
     
     cbar.set_label(unit, rotation=90, labelpad=10, fontsize=14)
-    
-#    pressure_difference_amount = 31
-#    df_sample = df_importances.loc[0:pressure_difference_amount-1,:]
-#    for i in range(len(df_sample.lat1)):
-#        plt.plot(df_sample.loc[i, "lon1"]*0.01,
-#                     df_sample.loc[i, "lat1"]*0.01,
-#                     "bx",
-#                     markersize=14*(len(df_sample.lat1)-i)/len(df_sample.lat1),
-#                     alpha=(len(df_sample.lat1)-i)/len(df_sample.lat1),
-#                     mew=4)
 
-#     plt.plot(df_sample.loc[len(df_sample.lat1)-1, "lon1"]*0.01,
-#                      df_sample.loc[len(df_sample.lat1)-1, "lat1"]*0.01,
-#                      "rx",
-#                      markersize=14,
-#                      alpha=1,
-#                      mew=4)
+    for i in df_importances.index:
+        plt.plot(df_importances.loc[i, "lon1"]*0.01,
+                    df_importances.loc[i, "lat1"]*0.01,
+                    "bx",
+                    markersize=12,
+                    alpha=df_importances.loc[i, "importance"]/df_importances["importance"].max(),
+                    mew=4)
+
 
     plt.plot(8.64441, 46.88042, 'o', color="#00FF00",markersize=8)
     mf.drawmap(nbrem=1, nbrep=1)
@@ -95,18 +87,30 @@ def create_vectorfield(grid_U, grid_V, variable, variable_lvl, unit, model, vmin
     plt.savefig(f'/home/chmony/Documents/Results/newgradient/weathermap_{variable}_{variable_lvl}_{model}.pdf', bbox_inches='tight', dpi=200)
     print(f"Saved figure at: /home/chmony/Documents/Results/newgradient/weathermap_{variable}_{variable_lvl}_{model}.pdf'")
 
-def generate_coordinates_from_feature_label(feature_list, variable):
+def generate_coordinates_from_feature_label(df_features, variable):
     
-    feature_list = [feature.split("_") for feature in feature_list if variable + "_" in feature]
-    if variable=="DELTAPHI" or variable=="U":
+    
+    feature_list = [feature.split("_") for feature in df_features.keys() if variable + "_" in feature]
+    importance_list = [value for feature, value in df_features.items() if variable + "_" in feature]
+    if variable=="U":
+        feature_list += [feature.split("_") for feature in df_features.keys() if "V_" in feature]
+        importance_list += [value for feature, value in df_features.items() if "V_" in feature]
         coordinates = [[feature[0], feature[1], feature[2]] for feature in feature_list]
         df_importances = pd.DataFrame(coordinates, columns =["variable", "lat1", "lon1"])
         df_importances[["lat1", "lon1"]] = df_importances[["lat1", "lon1"]].astype(int)
+        df_importances["importance"] = importance_list
+        return df_importances
+    elif variable=="DELTAPHI":
+        coordinates = [[feature[0], feature[1], feature[2]] for feature in feature_list]
+        df_importances = pd.DataFrame(coordinates, columns =["variable", "lat1", "lon1"])
+        df_importances[["lat1", "lon1"]] = df_importances[["lat1", "lon1"]].astype(int)
+        df_importances["importance"] = importance_list
         return df_importances
     else:
         coordinates = [[feature[1], feature[2], feature[3], feature[6], feature[7]] for feature in feature_list]
         df_importances = pd.DataFrame(coordinates, columns =["variable", "lat1", "lon1", "lat2", "lon2"], dtype=int)
         df_importances[["lat1", "lon1", "lat2", "lon2"]] = df_importances[["lat1", "lon1", "lat2", "lon2"]].astype(int)
+        df_importances["importance"] = importance_list
         return df_importances
     
 # Obtain ERA-Interim mean grid configurations
@@ -117,7 +121,7 @@ def create_contour(grid, variable, variable_lvl, unit, model, vmin, vmax, lats_l
 
     mf = Mapfigure(lon=np.array(lons), lat=np.array(lats))
     fig = plt.figure(figsize=(16,9))
-    plt.title(f"{variable} at {variable_lvl} hPa for {model} data")
+#     plt.title(f"{variable} at {variable_lvl} hPa for {model} data")
     
     cnt = plt.contourf(lons, lats, grid, 20, cmap=plt.cm.get_cmap('rocket'), vmin=vmin, vmax=vmax)
     m = plt.cm.ScalarMappable(cmap=plt.cm.get_cmap('rocket', 20))
@@ -127,7 +131,7 @@ def create_contour(grid, variable, variable_lvl, unit, model, vmin, vmax, lats_l
     cbar = plt.colorbar(m,
                         boundaries=np.round(np.linspace(vmin, vmax, 19),1),
                         ticks=np.round(np.linspace(vmin, vmax, 19),1),
-                        extend="both")
+                        extend="both", fraction=0.0189, pad=0.04)
     cbar.set_label(unit, rotation=90, labelpad=10, fontsize=14)
 
 #     for c in cnt.collections:
@@ -140,14 +144,14 @@ def create_contour(grid, variable, variable_lvl, unit, model, vmin, vmax, lats_l
                     df_importances.loc[i, "lat1"]*0.01,
                     "bx",
                     markersize=12,
-                    alpha=0.8,
+                    alpha=df_importances.loc[i, "importance"]/df_importances["importance"].max(),
                     mew=4)
 
     else:
         for i in range(len(df_importances.index)):
             plt.plot([df_importances.loc[i, "lon1"]*0.01, df_importances.loc[i, "lon2"]*0.01],
                    [df_importances.loc[i, "lat1"]*0.01, df_importances.loc[i, "lat2"]*0.01],
-                   alpha=0.8,
+                   alpha=df_importances.loc[i, "importance"]/df_importances["importance"].max(),
                    c='b',
                    linewidth=5)
 
@@ -166,7 +170,7 @@ def plot_mean_foehn_condition_for_one_model(variable, variable_lvl, unit, model,
     
     if variable == "U":
         grid_U, grid_V = transform_to_2D_grid(df_foehn, variable, variable_lvl, lats_labels, lons_labels)
-        create_vectorfield(grid_U, grid_V, variable, variable_lvl, unit, model, vmin, vmax, lats_labels, lons_labels)
+        create_vectorfield(grid_U, grid_V, variable, variable_lvl, unit, model, vmin, vmax, lats_labels, lons_labels, df_importances)
     else:
         grid = transform_to_2D_grid(df_foehn, variable, variable_lvl, lats_labels, lons_labels)
         create_contour(grid, variable, variable_lvl, unit, model, vmin, vmax, lats_labels, lons_labels, df_importances)
