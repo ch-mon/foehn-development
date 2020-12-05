@@ -123,19 +123,20 @@ def create_contour(grid, variable, variable_lvl, unit, model, vmin, vmax, lats_l
     fig = plt.figure(figsize=(16,9))
 #     plt.title(f"{variable} at {variable_lvl} hPa for {model} data")
     
-    cnt = plt.contourf(lons, lats, grid, 20, cmap=plt.cm.get_cmap('rocket'), vmin=vmin, vmax=vmax)
-    m = plt.cm.ScalarMappable(cmap=plt.cm.get_cmap('rocket', 20))
+    cnt = plt.contourf(lons, lats, grid, 20, cmap=plt.cm.get_cmap('coolwarm'), vmin=vmin, vmax=vmax)
+    plt.clabel(cnt, inline=0, fontsize=18, colors="k", fmt="%1.1f",  levels= cnt.levels[:-1:2])
+    m = plt.cm.ScalarMappable(cmap=plt.cm.get_cmap('coolwarm', 20))
     m.set_array(grid)
     m.set_clim(vmin, vmax)
  
     cbar = plt.colorbar(m,
                         boundaries=np.round(np.linspace(vmin, vmax, 19),1),
                         ticks=np.round(np.linspace(vmin, vmax, 19),1),
-                        extend="both", fraction=0.0189, pad=0.04)
-    cbar.set_label(unit, rotation=90, labelpad=10, fontsize=14)
+                        extend="both", fraction=0.0188, pad=0.03)
+    cbar.set_label(unit, rotation=90, labelpad=10)
 
-#     for c in cnt.collections:
-#         c.set_edgecolor("face")
+    for c in cnt.collections:
+        c.set_edgecolor("face")
 
 
     if variable == "DELTAPHI":
@@ -158,7 +159,7 @@ def create_contour(grid, variable, variable_lvl, unit, model, vmin, vmax, lats_l
     
     
     #Plot Foehn location
-    plt.plot(8.6833, 46.5167, 'o', color="#00FF00",markersize=8) #Altdorf 8.64441, 46.88042
+    plt.plot( 8.64441, 46.88042, 'o', color="#00FF00",markersize=8) #Altdorf 8.64441, 46.88042, Lugano: 8.6833, 46.5167
     mf.drawmap(nbrem=1, nbrep=1)
 
     plt.savefig(f'/home/chmony/Documents/Results/newgradient/weathermap_{variable}_{variable_lvl}_{model}.pdf', bbox_inches='tight', dpi=200)
