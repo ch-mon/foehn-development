@@ -53,24 +53,27 @@ def create_vectorfield(grid_U, grid_V, variable, variable_lvl, unit, model, vmin
 
     mf = Mapfigure(lon=np.array(lons), lat=np.array(lats))
     fig = plt.figure(figsize=(16,9))
+    plt.rcParams.update({'font.size': 20})
 
     grid_ges = np.sqrt(grid_U**2+grid_V**2)
 
     norm = matplotlib.colors.Normalize()
     norm.autoscale(grid_ges.flatten())
-    cm = plt.cm.get_cmap('rocket_r', 20)
+    cm = plt.cm.get_cmap('rocket_r')
 
     sm = plt.cm.ScalarMappable(cmap=cm)
     sm.set_array(grid_ges.flatten())
 
     qui = plt.quiver(lons, lats, grid_U, grid_V, scale_units="xy", color=cm(norm(grid_ges.flatten())))
     
+    levels= np.arange(vmin, vmax, 1)
+    ticks= levels
     cbar = plt.colorbar(sm,
-                        boundaries=np.round(np.linspace(vmin, vmax, 19),1),
-                        ticks=np.round(np.linspace(vmin, vmax, 19),1),
-                        extend="both")
+                        boundaries=levels,
+                        ticks=ticks,
+                        extend="both", fraction=0.0188, pad=0.03)
     
-    cbar.set_label(unit, rotation=90, labelpad=10, fontsize=14)
+    cbar.set_label(unit, rotation=90, labelpad=10)
 
     for i in df_importances.index:
         plt.plot(df_importances.loc[i, "lon1"]*0.01,
@@ -80,9 +83,9 @@ def create_vectorfield(grid_U, grid_V, variable, variable_lvl, unit, model, vmin
                     alpha=df_importances.loc[i, "importance"]/df_importances["importance"].max(),
                     mew=4)
 
-
-    plt.plot(8.64441, 46.88042, 'o', color="#00FF00",markersize=8)
     mf.drawmap(nbrem=1, nbrep=1)
+    plt.plot(8.96004, 46.01008, 'o', color="#00FF00",markersize=8)
+    
 
     plt.savefig(f'/home/chmony/Documents/Results/newgradient/weathermap_{variable}_{variable_lvl}_{model}.pdf', bbox_inches='tight', dpi=200)
     print(f"Saved figure at: /home/chmony/Documents/Results/newgradient/weathermap_{variable}_{variable_lvl}_{model}.pdf'")
@@ -121,17 +124,31 @@ def create_contour(grid, variable, variable_lvl, unit, model, vmin, vmax, lats_l
 
     mf = Mapfigure(lon=np.array(lons), lat=np.array(lats))
     fig = plt.figure(figsize=(16,9))
+    plt.rcParams.update({'font.size': 20})
 #     plt.title(f"{variable} at {variable_lvl} hPa for {model} data")
     
-    cnt = plt.contourf(lons, lats, grid, 20, cmap=plt.cm.get_cmap('coolwarm'), vmin=vmin, vmax=vmax)
-    plt.clabel(cnt, inline=0, fontsize=18, colors="k", fmt="%1.1f",  levels= cnt.levels[:-1:2])
-    m = plt.cm.ScalarMappable(cmap=plt.cm.get_cmap('coolwarm', 20))
+    if vmax-vmin<=10.2:
+        levels = np.arange(vmin, vmax, 0.5)
+        ticks= levels[1::2]
+    elif vmax-vmin<20:
+        levels= np.arange(vmin, vmax, 1)
+        ticks= levels[1::2]
+    else:
+        levels= np.arange(vmin, vmax, 10)
+        ticks= levels[1::2]
+        
+    cmap=plt.cm.get_cmap('rocket')
+    
+    cnt = plt.contourf(lons, lats, grid, levels=levels, cmap=cmap, vmin=vmin, vmax=vmax)
+#     cnt_l =  plt.contour(lons, lats, grid, levels=np.round(np.linspace(vmin, vmax, 19),1), colors="k", linewidths=0.1, vmin=vmin, vmax=vmax)
+#     plt.clabel(cnt_l, inline=0, fontsize=18, fmt="%1.1f",  levels= cnt_l.levels[1:-1:2])
+    m = plt.cm.ScalarMappable(cmap=cmap)
     m.set_array(grid)
     m.set_clim(vmin, vmax)
  
     cbar = plt.colorbar(m,
-                        boundaries=np.round(np.linspace(vmin, vmax, 19),1),
-                        ticks=np.round(np.linspace(vmin, vmax, 19),1),
+                        boundaries=levels,
+                        ticks=ticks,
                         extend="both", fraction=0.0188, pad=0.03)
     cbar.set_label(unit, rotation=90, labelpad=10)
 
@@ -157,10 +174,10 @@ def create_contour(grid, variable, variable_lvl, unit, model, vmin, vmax, lats_l
                    linewidth=5)
 
     
-    
-    #Plot Foehn location
-    plt.plot( 8.64441, 46.88042, 'o', color="#00FF00",markersize=8) #Altdorf 8.64441, 46.88042, Lugano: 8.6833, 46.5167
     mf.drawmap(nbrem=1, nbrep=1)
+    #Plot Foehn location
+    plt.plot( 8.96004, 46.01008, 'o', color="#00FF00",markersize=8) #Altdorf 8.64441, 46.88042, Piotta: 8.6833, 46.5167, Lugano: 8.96004, 46.01008
+   
 
     plt.savefig(f'/home/chmony/Documents/Results/newgradient/weathermap_{variable}_{variable_lvl}_{model}.pdf', bbox_inches='tight', dpi=200)
     print(f"Saved figure at: /home/chmony/Documents/Results/newgradient/weathermap_{variable}_{variable_lvl}_{model}.pdf'")

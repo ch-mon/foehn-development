@@ -1,3 +1,5 @@
+import matplotlib.pyplot as plt
+
 def calc_pot_temp(T, p):
     p_0 = 1000.0
     c_p = 1005.0
@@ -26,3 +28,7 @@ def load_CESM(filepath, LATS_CESM_STRING, LONS_CESM_STRING):
     
     # Return dataframe with all neceassary basic features
     return pd.concat([df_CESM, df_PHIT_900, df_PHIT_850, df_PHIT_700], axis=1)
+
+def save_figure(name):
+    plt.savefig(f'/home/chmony/Documents/Results/newgradient/{name}.pdf', bbox_inches='tight', dpi=200)
+    print(f'Saved figure at: /home/chmony/Documents/Results/newgradient/{name}.pdf')
