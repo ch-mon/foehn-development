@@ -5,13 +5,13 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-def fit_model_on_all_ERA_features_with_CV_and_return_most_important_features(model, parameters_CV, df_ERA, feature_names, train_mask, test_mask, with_CV=False):
+def fit_model_on_all_ERA_features_with_CV_and_return_most_important_features(model, parameters_CV, df_ERA, feature_names, train_mask, test_mask, with_CV):
     '''
     Train ML model on whole ERA data and return the most important features
     '''
     print("Started")
     
-    if with_CV=True:    
+    if with_CV==True:    
         model_CV = GridSearchCV(model, parameters_CV, cv=3, n_jobs=5, scoring='neg_log_loss', verbose=3)
         model_CV.fit(df_ERA.loc[train_mask, feature_names], 
                      df_ERA.loc[train_mask, "Foehn"])
