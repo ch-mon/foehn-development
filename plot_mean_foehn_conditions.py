@@ -117,20 +117,20 @@ def generate_coordinates_from_feature_label(df_features, variable):
         return df_importances
     
 # Obtain ERA-Interim mean grid configurations
-def create_contour(grid, variable, variable_lvl, unit, model, vmin, vmax, lats_labels, lons_labels, df_importances):
+def create_contour(grid, variable, variable_lvl, unit, model, vmin, vmax, lats_labels, lons_labels, df_importances, location):
   
     lats = [int(lat)/100.0 for lat in lats_labels]
     lons = [int(lon)/100.0 for lon in lons_labels]
 
     mf = Mapfigure(lon=np.array(lons), lat=np.array(lats))
-    fig = plt.figure(figsize=(16,9))
+#     fig = plt.figure(figsize=(16,9))
     plt.rcParams.update({'font.size': 20})
 #     plt.title(f"{variable} at {variable_lvl} hPa for {model} data")
     
     if vmax-vmin<=10.2:
         levels = np.arange(vmin, vmax, 0.5)
         ticks= levels[1::2]
-    elif vmax-vmin<20:
+    elif vmax-vmin<=21:
         levels= np.arange(vmin, vmax, 1)
         ticks= levels[1::2]
     else:
@@ -175,23 +175,26 @@ def create_contour(grid, variable, variable_lvl, unit, model, vmin, vmax, lats_l
 
     
     mf.drawmap(nbrem=1, nbrep=1)
-    #Plot Foehn location
-    plt.plot( 8.96004, 46.01008, 'o', color="#00FF00",markersize=8) #Altdorf 8.64441, 46.88042, Piotta: 8.6833, 46.5167, Lugano: 8.96004, 46.01008
+    #Plot Foehn location (Altdorf 8.64441, 46.88042, Piotta: 8.6833, 46.5167, Lugano: 8.96004, 46.01008)
+    if location == "ALT":
+        plt.plot(8.64441, 46.88042, 'o', color="#00FF00",markersize=8)
+    elif location == "LUG":
+        plt.plot(8.96004, 46.01008, 'o', color="#00FF00",markersize=8)
+        
    
-
-    plt.savefig(f'/home/chmony/Documents/Results/newgradient/weathermap_{variable}_{variable_lvl}_{model}.pdf', bbox_inches='tight', dpi=200)
-    print(f"Saved figure at: /home/chmony/Documents/Results/newgradient/weathermap_{variable}_{variable_lvl}_{model}.pdf'")
+    #plt.savefig(f'/home/chmony/Documents/Results/newgradient/weathermap_{variable}_{variable_lvl}_{model}.pdf', bbox_inches='tight', dpi=200)
+    #print(f"Saved figure at: /home/chmony/Documents/Results/newgradient/weathermap_{variable}_{variable_lvl}_{model}.pdf'")
 
     
-def plot_mean_foehn_condition_for_one_model(variable, variable_lvl, unit, model, vmin, vmax, df, foehn, lats_labels, lons_labels, df_importances):
+def plot_mean_foehn_condition_for_one_model(variable, variable_lvl, unit, model, vmin, vmax, df, foehn, lats_labels, lons_labels, df_importances,location):
     df_foehn = df.loc[foehn == 1, :]
     
     if variable == "U":
         grid_U, grid_V = transform_to_2D_grid(df_foehn, variable, variable_lvl, lats_labels, lons_labels)
-        create_vectorfield(grid_U, grid_V, variable, variable_lvl, unit, model, vmin, vmax, lats_labels, lons_labels, df_importances)
+        create_vectorfield(grid_U, grid_V, variable, variable_lvl, unit, model, vmin, vmax, lats_labels, lons_labels, df_importances, location)
     else:
         grid = transform_to_2D_grid(df_foehn, variable, variable_lvl, lats_labels, lons_labels)
-        create_contour(grid, variable, variable_lvl, unit, model, vmin, vmax, lats_labels, lons_labels, df_importances)
+        create_contour(grid, variable, variable_lvl, unit, model, vmin, vmax, lats_labels, lons_labels, df_importances, location)
         
     
 
