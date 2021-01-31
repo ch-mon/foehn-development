@@ -5,24 +5,7 @@ import seaborn as sns
 from dypy.plotting import Mapfigure
 import matplotlib
 
-from utils import calc_pot_temp
-
-def calculate_stability(df, lats, lons):
-    stability_dict = {}
-    
-    for lat in lats:
-        for lon in lons:
-            try:
-                stability_dict[f"DELTAPHI_{lat}_{lon}_700"] = (calc_pot_temp(T=df[f"T_{lat}_{lon}_700"], p = 700.0) - calc_pot_temp(T=df[f"T_{lat}_{lon}_900"], p = 900.0)).values
-            except:
-                print("Pressure lvl doesnt exist (700-900 hPa, " + lat +", " + lon +")")
-
-            try:
-                stability_dict[f"DELTAPHI_{lat}_{lon}_850"] = (calc_pot_temp(T=df[f"T_{lat}_{lon}_850"], p = 850.0) - calc_pot_temp(T=df[f"T_{lat}_{lon}_900"], p = 900.0)).values
-            except:
-                print("Pressure lvl doesnt exist (850-900 hPa, " + lat +", " + lon +")")
-    
-    return pd.concat([df, pd.DataFrame.from_dict(stability_dict)], axis=1)
+from utils import calc_pot_temp, calculate_stability
 
 def transform_to_2D_grid(df, variable, variable_lvl, lats_labels, lons_labels):
     grid_foehn = np.zeros((len(lats_labels), len(lons_labels)))
