@@ -1,0 +1,16 @@
+name: foehn_development
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - pandas
+  - seaborn
+  - scipy
+  - scikit-learn
+  - jupyter
+  - catboost
+  - lightgbm
+  - cartopy
+  - jupyterlab
+  - pip:
+    - xgboost
