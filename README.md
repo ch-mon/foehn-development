@@ -16,7 +16,7 @@ conda activate foehn_development
 
 
 # Main structure 
-The scripts which are used for this analysis can be found under the `src` folder. There you can find the scripts which I used for the data preprocessing `01_preprocessing` and the analysis `02_analysis`.
+The scripts which are used for this analysis can be found under the `src` folder. There you can find the scripts which I used for the data preprocessing `01_preprocessing` and the analysis `02_analysis`. The main script is `src/02_analysis/train_model_on_ERAI_and_predict_on_CESM.ipynb`, which I have already started tidying up.
 
 The `data` folder contains a structure (not the data itself) which I found helpful during the work and which serves as storage for intermediate data of different stages.
 

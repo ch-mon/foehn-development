@@ -66,6 +66,9 @@ def save_figure(name):
     
     
 def calculate_horizontal_feature_differences(df, variable, pressure_levels):
+    '''
+    Calculate the horizontal potential temperature differences for a given variable and pressure levels.
+    '''
     
     df_variable = df.filter(regex=(f"{variable}_\w+"))
     

@@ -8,6 +8,9 @@ import matplotlib
 from utils import calc_pot_temp, calculate_stability
 
 def transform_to_2D_grid(df, variable, variable_lvl, lats_labels, lons_labels):
+    '''
+    Transform dataframes into 2D arrays.
+    '''
     grid_foehn = np.zeros((len(lats_labels), len(lons_labels)))
     
     if variable == "U":
@@ -30,6 +33,9 @@ def transform_to_2D_grid(df, variable, variable_lvl, lats_labels, lons_labels):
         return grid_foehn
     
 def create_vectorfield(grid_U, grid_V, variable, variable_lvl, unit, model, vmin, vmax, lats_labels, lons_labels, df_importances):
+    '''
+    Create vector field plot for U and V variables.
+    '''
   
     lats = [int(lat)/100.0 for lat in lats_labels]
     lons = [int(lon)/100.0 for lon in lons_labels]
@@ -74,7 +80,9 @@ def create_vectorfield(grid_U, grid_V, variable, variable_lvl, unit, model, vmin
     print(f"Saved figure at: /home/chmony/Documents/Results/newgradient/weathermap_{variable}_{variable_lvl}_{model}.pdf'")
 
 def generate_coordinates_from_feature_label(df_features, variable):
-    
+    '''
+    Extract coordinates from feauture names again. Necessary for plotting most important differences.
+    '''
     
     feature_list = [feature.split("_") for feature in df_features.keys() if variable + "_" in feature]
     importance_list = [value for feature, value in df_features.items() if variable + "_" in feature]
@@ -101,6 +109,9 @@ def generate_coordinates_from_feature_label(df_features, variable):
     
 # Obtain ERA-Interim mean grid configurations
 def create_contour(grid, variable, variable_lvl, unit, model, vmin, vmax, lats_labels, lons_labels, df_importances, location):
+    '''
+    Create contour plot for a specified variable at a given pressure level.
+    '''
   
     lats = [int(lat)/100.0 for lat in lats_labels]
     lons = [int(lon)/100.0 for lon in lons_labels]
@@ -170,6 +181,9 @@ def create_contour(grid, variable, variable_lvl, unit, model, vmin, vmax, lats_l
 
     
 def plot_mean_foehn_condition_for_one_model(variable, variable_lvl, unit, model, vmin, vmax, df, foehn, lats_labels, lons_labels, df_importances,location):
+    '''
+    Plot composite map for a given variable for all positive foehn instances.
+    '''
     df_foehn = df.loc[foehn == 1, :]
     
     if variable == "U":
@@ -180,18 +194,6 @@ def plot_mean_foehn_condition_for_one_model(variable, variable_lvl, unit, model,
         create_contour(grid, variable, variable_lvl, unit, model, vmin, vmax, lats_labels, lons_labels, df_importances, location)
         
     
-
-
-def execute_for_all_dataframes(variable, variable_lvl, df_ERA, df_CESMp, df_CESMf, foehn_obs, foehn_ERA, foehn_CESMp, foehn_CESMf, lats_labels, lons_labels):
-    df_obs = df_ERA.loc[foehn_obs == 1, :]
-    df_ERA = df_ERA.loc[foehn_ERA == 1, :]
-    df_CESMp = df_CESMp.loc[foehn_CESMp == 1, :]
-    df_CESMf = df_CESMf.loc[foehn_CESMf == 1, :]
-    
-    
-    transform_to_2D_grid(df_ERA)
-    transform_to_2D_grid(df_ERA)
-    
 if __name__ == "__main__":
-    print("Hello World.")
+    pass
     
