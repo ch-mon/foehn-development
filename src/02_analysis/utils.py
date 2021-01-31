@@ -19,19 +19,23 @@ def load_CESM(filepath, LATS_CESM_STRING, LONS_CESM_STRING):
     df_CESM = pd.read_csv(filepath)
     df_CESM["date"] = pd.to_datetime(df_CESM["date"], format="%Y-%m-%dT%H:%M:00.000000Z") # Due to Dataiku date format, evtl adjust this
     
-    # Calculate and append the stability features
-    df_CESM = calculate_stability(df = df_CESM, lats = LATS_CESM_STRING, lons = LONS_CESM_STRING)
-
     # Calculate and append potential temperature features
     df_T= df_CESM.filter(regex=("T\w+900")).add_prefix("PHI")
-    df_PHIT_900 = calc_pot_temp(T=df_T, p = 900.0)
+    df_PHIT_900 = calc_pot_temp(T=df_T, p=900.0)
     df_T= df_CESM.filter(regex=("T\w+850")).add_prefix("PHI")
-    df_PHIT_850 = calc_pot_temp(T=df_T, p = 850.0)
+    df_PHIT_850 = calc_pot_temp(T=df_T, p=850.0)
     df_T= df_CESM.filter(regex=("T\w+700")).add_prefix("PHI")
-    df_PHIT_700 = calc_pot_temp(T=df_T, p = 700.0)
+    df_PHIT_700 = calc_pot_temp(T=df_T, p=700.0)
     
+    df_CESM = pd.concat([df_CESM, df_PHIT_900, df_PHIT_850, df_PHIT_700], axis=1)
+    
+    # Calculate and append the stability features
+    df_CESM_stability = calculate_stability(df = df_CESM, lats = LATS_CESM_STRING, lons = LONS_CESM_STRING)
+    df_CESM = pd.concat([df_CESM, df_CESM_stability], axis=1)
+
     # Return dataframe with all neceassary basic features
-    return pd.concat([df_CESM, df_PHIT_900, df_PHIT_850, df_PHIT_700], axis=1)
+    return df_CESM
+
 
 def calculate_stability(df, lats, lons):
     '''
@@ -43,18 +47,38 @@ def calculate_stability(df, lats, lons):
     for lat in lats:
         for lon in lons:
             try:
-                stability_dict[f"DELTAPHI_{lat}_{lon}_700"] = (calc_pot_temp(T=df[f"T_{lat}_{lon}_700"], p = 700.0) - calc_pot_temp(T=df[f"T_{lat}_{lon}_900"], p = 900.0)).values
+                stability_dict[f"DELTAPHI_{lat}_{lon}_700"] = (df[f"PHIT_{lat}_{lon}_700"] - df[f"PHIT_{lat}_{lon}_900"]).values
             except:
-                print("Pressure lvl doesnt exist (700-900 hPa, " + lat +", " + lon +")")
+                # Might happen since not all features are avaliable in CESM
+                pass
 
             try:
-                stability_dict[f"DELTAPHI_{lat}_{lon}_850"] = (calc_pot_temp(T=df[f"T_{lat}_{lon}_850"], p = 850.0) - calc_pot_temp(T=df[f"T_{lat}_{lon}_900"], p = 900.0)).values
+                stability_dict[f"DELTAPHI_{lat}_{lon}_850"] = (df[f"PHIT_{lat}_{lon}_850"] - df[f"PHIT_{lat}_{lon}_900"]).values
             except:
-                print("Pressure lvl doesnt exist (850-900 hPa, " + lat +", " + lon +")")
+                # Might happen since not all features are avaliable in CESM
+                pass
     
-    return pd.concat([df, pd.DataFrame.from_dict(stability_dict)], axis=1) # Change this so that it only returns stability dataframe later
+    return pd.DataFrame(stability_dict) 
 
 def save_figure(name):
     plt.savefig(f'/home/chmony/Documents/Results/newgradient/{name}.pdf', bbox_inches='tight', dpi=200)
     print(f'Saved figure at: /home/chmony/Documents/Results/newgradient/{name}.pdf')
     
+    
+def calculate_horizontal_feature_differences(df, variable, pressure_levels):
+    
+    df_variable = df.filter(regex=(f"{variable}_\w+"))
+    
+    feature_dict = {}
+    for level in pressure_levels:
+        df_level = df_variable.filter(regex=(f"\w+_{level}"))
+
+        variable_list1 = sorted(df_level.columns.tolist())
+        variable_list2 = sorted(df_level.columns.tolist())
+        
+        for col1 in variable_list1:
+            variable_list2.remove(col1)
+            for col2 in variable_list2:
+                feature_dict[f"diff_{col1}_{col2}"] = (df_level.loc[:, col1] - df_level.loc[:, col2]).values
+
+    return pd.DataFrame(feature_dict)
