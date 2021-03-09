@@ -27,12 +27,13 @@ def transform_to_2D_grid(df, variable, variable_lvl, lats_labels, lons_labels):
             for index_lon, lon in enumerate(lons_labels):
                 try:
                     grid_foehn[index_lat][index_lon] = df.loc[:,f"{variable}_{lat}_{lon}_{variable_lvl}"].mean()
-                except:
+                except OSError as err:
+                    print(err)
                     grid_foehn[index_lat][index_lon] = np.NaN
         
         return grid_foehn
     
-def create_vectorfield(grid_U, grid_V, variable, variable_lvl, unit, model, vmin, vmax, lats_labels, lons_labels, df_importances):
+def create_vectorfield(grid_U, grid_V, variable, variable_lvl, unit, model, vmin, vmax, lats_labels, lons_labels, df_importances, location):
     '''
     Create vector field plot for U and V variables.
     '''
@@ -41,8 +42,8 @@ def create_vectorfield(grid_U, grid_V, variable, variable_lvl, unit, model, vmin
     lons = [int(lon)/100.0 for lon in lons_labels]
 
     mf = Mapfigure(lon=np.array(lons), lat=np.array(lats))
-    fig = plt.figure(figsize=(16,9))
-    plt.rcParams.update({'font.size': 20})
+#     fig = plt.figure(figsize=(16,9))
+#     plt.rcParams.update({'font.size': 20})
 
     grid_ges = np.sqrt(grid_U**2+grid_V**2)
 
@@ -73,11 +74,15 @@ def create_vectorfield(grid_U, grid_V, variable, variable_lvl, unit, model, vmin
                     mew=4)
 
     mf.drawmap(nbrem=1, nbrep=1)
-    plt.plot(8.96004, 46.01008, 'o', color="#00FF00",markersize=8)
+    #Plot Foehn location (Altdorf 8.64441, 46.88042, Piotta: 8.6833, 46.5167, Lugano: 8.96004, 46.01008)
+    if location == "ALT":
+        plt.plot(8.64441, 46.88042, 'o', color="#00FF00",markersize=8)
+    elif location == "LUG":
+        plt.plot(8.96004, 46.01008, 'o', color="#00FF00",markersize=8)
     
 
-    plt.savefig(f'/home/chmony/Documents/Results/newgradient/weathermap_{variable}_{variable_lvl}_{model}.pdf', bbox_inches='tight', dpi=200)
-    print(f"Saved figure at: /home/chmony/Documents/Results/newgradient/weathermap_{variable}_{variable_lvl}_{model}.pdf'")
+#     plt.savefig(f'/home/chmony/Documents/Results/newgradient/weathermap_{variable}_{variable_lvl}_{model}.pdf', bbox_inches='tight', dpi=200)
+#     print(f"Saved figure at: /home/chmony/Documents/Results/newgradient/weathermap_{variable}_{variable_lvl}_{model}.pdf'")
 
 def generate_coordinates_from_feature_label(df_features, variable):
     '''
@@ -134,7 +139,7 @@ def create_contour(grid, variable, variable_lvl, unit, model, vmin, vmax, lats_l
     cmap=plt.cm.get_cmap('rocket')
     
     cnt = plt.contourf(lons, lats, grid, levels=levels, cmap=cmap, vmin=vmin, vmax=vmax)
-#     cnt_l =  plt.contour(lons, lats, grid, levels=np.round(np.linspace(vmin, vmax, 19),1), colors="k", linewidths=0.1, vmin=vmin, vmax=vmax)
+#     cnt_l =  plt.contour(lons, lats, grid, levels=levels, colors="w", linewidths=0.001, vmin=vmin, vmax=vmax)
 #     plt.clabel(cnt_l, inline=0, fontsize=18, fmt="%1.1f",  levels= cnt_l.levels[1:-1:2])
     m = plt.cm.ScalarMappable(cmap=cmap)
     m.set_array(grid)
@@ -146,8 +151,10 @@ def create_contour(grid, variable, variable_lvl, unit, model, vmin, vmax, lats_l
                         extend="both", fraction=0.0188, pad=0.03)
     cbar.set_label(unit, rotation=90, labelpad=10)
 
-    for c in cnt.collections:
-        c.set_edgecolor("face")
+#     for c in cnt.collections:
+# #         c.set_linewidth(0.0001)
+#         c.set_edgecolor("face")
+       
 
 
     if variable == "DELTAPHI":
@@ -163,9 +170,8 @@ def create_contour(grid, variable, variable_lvl, unit, model, vmin, vmax, lats_l
         for i in range(len(df_importances.index)):
             plt.plot([df_importances.loc[i, "lon1"]*0.01, df_importances.loc[i, "lon2"]*0.01],
                    [df_importances.loc[i, "lat1"]*0.01, df_importances.loc[i, "lat2"]*0.01],
-                   alpha=df_importances.loc[i, "importance"]/df_importances["importance"].max(),
-                   c='b',
-                   linewidth=5)
+                   linewidth=5*df_importances.loc[i, "importance"]/df_importances["importance"].max(),
+                   c='b')
 
     
     mf.drawmap(nbrem=1, nbrep=1)
