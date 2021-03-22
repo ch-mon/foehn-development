@@ -1,6 +1,12 @@
 import matplotlib.pyplot as plt
 import pandas as pd
 
+# Month abbreviation
+MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+
+# Get base directory which is two levels up
+BASE_DIR = os.path.dirname(os.path.dirname(os.getcwd()))
+
 def calc_pot_temp(T, p):
     '''
     Calculate the potential temperature at a given pressure level.
@@ -61,8 +67,9 @@ def calculate_stability(df, lats, lons):
     return pd.DataFrame(stability_dict) 
 
 def save_figure(name):
-    plt.savefig(f'/home/chmony/Documents/Results/newgradient/{name}.pdf', bbox_inches='tight', dpi=200)
-    print(f'Saved figure at: /home/chmony/Documents/Results/newgradient/{name}.pdf')
+    filepath = os.path.join(BASE_DIR, f'figures/{name}.pdf')
+    plt.savefig(filepath, bbox_inches='tight', dpi=200)
+    print(f'Saved figure at: {filepath}')
     
     
 def calculate_horizontal_feature_differences(df, variable, pressure_levels):
@@ -85,3 +92,36 @@ def calculate_horizontal_feature_differences(df, variable, pressure_levels):
                 feature_dict[f"diff_{col1}_{col2}"] = (df_level.loc[:, col1] - df_level.loc[:, col2]).values
 
     return pd.DataFrame(feature_dict)
+
+def generate_reduced_features_on_CESM(feature_to_generate, df_CESM):
+    """
+    Generate the most important ERAI features on CESM.
+    @param feature_to_generate: List of most important features
+    @type feature_to_generate: list
+    @param df_CESM: CESM dataframe (present or future)
+    @type df_CESM: pd.DataFrame
+    @return: Dataframe with most important features, date and ensemble member
+    @rtype: pd.DataFrame
+    """
+
+    # Loop over all features
+    feature_dict_CESM = {}
+    for feature_name in feature_to_generate:
+        if feature_name[0:2] == "V_" or feature_name[0:2] == "U_":  # Wind features
+            feature_dict_CESM[feature_name] = df_CESM.loc[:, feature_name].values
+        elif feature_name[0:6] == "DELTAP":  # Stability features
+            feature_name_splitted = feature_name.split("_")
+            first_feature = "PHIT_" + "_".join(feature_name_splitted[1:4])
+            second_feature = "PHIT_" + "_".join(feature_name_splitted[1:3]) + "_900"
+            feature_dict_CESM["DELTAPHI_" + "_".join(feature_name_splitted[1:4])] = (df_CESM.loc[:, first_feature] - df_CESM.loc[:, second_feature]).values
+        else:  # SLP, Z, and PHIT features
+            feature_name_splitted = feature_name.split("_")
+            first_feature = "_".join(feature_name_splitted[1:5])
+            second_feature = "_".join(feature_name_splitted[5:9])
+            feature_dict_CESM[f"diff_{first_feature}_{second_feature}"] = (df_CESM.loc[:, first_feature] - df_CESM.loc[:, second_feature]).values
+
+    # Append data and ensemble member feature
+    feature_dict_CESM["date"] = df_CESM.loc[:, "date"].values
+    feature_dict_CESM["ensemble"] = df_CESM.loc[:, "ensemble"].values
+
+    return pd.DataFrame(feature_dict_CESM)
