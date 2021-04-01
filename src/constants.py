@@ -5,6 +5,9 @@ import os
 # Get base directory which is two levels up (from where this is called)
 BASE_DIR = os.path.dirname(os.path.dirname(os.getcwd()))
 
+# Month abbreviation
+MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+
 # Define box within to consider grid points in ERAI and CESM (in degrees)
 LON_MIN = 0
 LON_MAX = 15
@@ -36,6 +39,7 @@ LONS_CESM_STRING = [str(int(100*lon)) for lon in LONS_CESM]
 
 print("--- Avaliable variables ---")
 print("Base directory: BASE_DIR")
+print("Month names: MONTH_NAMES")
 print("Bounding box coordinates: LON_MIN, LON_MAX, LAT_MIN, LAT_MAX")
 print("ERAI coordinates: LONS_ERA, LATS_ERA")
 print("CESM coordinates: LONS_CESM, LATS_CESM")
