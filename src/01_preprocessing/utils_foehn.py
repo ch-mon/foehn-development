@@ -11,7 +11,7 @@ MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "O
 BASE_DIR = os.path.dirname(os.path.dirname(os.getcwd()))
 
 def save_figure(name):
-    filepath = os.path.join(BASE_DIR, f'figures/{name}.pdf')
+    filepath = os.path.join(BASE_DIR, "figures", f"{name}.pdf")
     plt.savefig(filepath, bbox_inches='tight', dpi=200)
     print(f'Saved figure at: {filepath}')
 
