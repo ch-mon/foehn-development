@@ -45,3 +45,6 @@ print("ERAI coordinates: LONS_ERA, LATS_ERA")
 print("CESM coordinates: LONS_CESM, LATS_CESM")
 print("CESM slice: INDEX_CESM")
 print("CESM coordinates for plotting (string): LONS_CESM_STRING, LATS_CESM_STRING")
+
+# Do not leak any other variables into scripts
+del path, lons, lats, xindex, yindex, xmin, xmax, ymin, ymax
