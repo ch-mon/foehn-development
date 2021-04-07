@@ -78,7 +78,7 @@ def save_figure(name):
     Save a PDF figure to figures folder.
     @param name: Name of the figure
     """
-    filepath = os.path.join(BASE_DIR, f'figures/{name}.pdf')
+    filepath = os.path.join(BASE_DIR, 'figures', f'{name}.pdf')
     plt.savefig(filepath, bbox_inches='tight', dpi=200)
     print(f'Saved figure at: {filepath}')
     
