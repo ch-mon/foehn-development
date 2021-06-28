@@ -12,7 +12,7 @@ class ConstrainedXGBoost:
     Class which allows to train and evaluate the constrained XGBoost model for all months.
     """
 
-    def __init__(self, df_ERA, df_CESMp, features, train_mask, test_mask, params, initial_boosting_rounds):
+    def __init__(self, df_ERA, df_CESMp, features, train_mask, test_mask, params, initial_boosting_rounds, lambda_):
         """
         Initialize a model which is pretrained on ERAI data and stores relevant datasets.
         @param df_ERA: ERAI dataframe
@@ -29,6 +29,8 @@ class ConstrainedXGBoost:
         @type params: dict
         @param initial_boosting_rounds: Rounds to train the model solely on ERAI data
         @type initial_boosting_rounds: int
+        @param lambda_: Constraint parameter
+        @type lambda_: int
         """
 
         print("Loading data ...")
@@ -53,6 +55,7 @@ class ConstrainedXGBoost:
         self.f1_scores = dict()
         self.total_confusion_matrix = np.zeros((2, 2))
         self.most_important_features = dict()
+        self.lambda_ = lambda_
 
         print("Model ready to use ...")
 
@@ -75,7 +78,7 @@ class ConstrainedXGBoost:
         @rtype: xgb.Booster
         """
 
-        def custom_loss(prediction: np.ndarray, dtrain: xgb.DMatrix, ERA_len, CESM_len, alpha=60000):
+        def custom_loss(prediction: np.ndarray, dtrain: xgb.DMatrix, ERA_len, CESM_len):
             """
             Specify a loss function which takes an constraint objective into consideration and returns gradient and
             hessian for the training. This objective (Squared Mean Error) is then optimized on the unlabeled CESM data.
@@ -87,8 +90,6 @@ class ConstrainedXGBoost:
             @type ERA_len: int
             @param CESM_len: umber of CESMp samples in dtrain (after ERAI samples)
             @type CESM_len: int
-            @param alpha: Constraint parameter
-            @type alpha: int
             @return: Gradient and hessian of prediction for ERAI and CESM samples
             @rtype: np.ndarray, np.ndarray
             """
@@ -106,8 +107,8 @@ class ConstrainedXGBoost:
             hess_logloss = pred_ERA * (1.0 - pred_ERA)
 
             # Calculate SME gradient and hessian for CESM samples
-            grad_SME = 2 * alpha / CESM_len * pred_CESM * (1 - pred_CESM) * (np.mean(pred_CESM) - np.mean(y_ERA))
-            hess_SME = 2 * alpha / CESM_len * pred_CESM * (1 - pred_CESM) * (
+            grad_SME = 2 * self.lambda_ / CESM_len * pred_CESM * (1 - pred_CESM) * (np.mean(pred_CESM) - np.mean(y_ERA))
+            hess_SME = 2 * self.lambda_ / CESM_len * pred_CESM * (1 - pred_CESM) * (
                     (1 - pred_CESM) * (np.mean(pred_CESM) - np.mean(y_ERA)) -
                     pred_CESM * (np.mean(pred_CESM) - np.mean(y_ERA)) +
                     pred_CESM * (1 - pred_CESM) / CESM_len
